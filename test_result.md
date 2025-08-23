@@ -128,6 +128,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "Successfully tested - Creates projects with valid data. Carbon credit calculations work correctly (credits × price = total). Minor: Returns 500 error for missing contract_date instead of validation error."
+        - working: true
+          agent: "testing"
+          comment: "FINAL CONNECTION ERROR RESOLUTION TEST COMPLETED: ✅ 100% SUCCESS RATE (8/8 tests passed). Connection error completely resolved! All date formats accepted (ISO with/without milliseconds, date-only, timezone). Automatic total calculation working (95,625 = 2250 × 42.50). String data types converted correctly. Invalid dates properly rejected with 400 error. Data persistence to Supabase confirmed working."
 
   - task: "PUT /api/forest-projects/{id} - Update existing project"
     implemented: true
