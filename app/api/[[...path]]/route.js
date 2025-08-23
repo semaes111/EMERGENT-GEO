@@ -1,104 +1,147 @@
-import { MongoClient } from 'mongodb'
-import { v4 as uuidv4 } from 'uuid'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { supabase, initializeDatabase } from '../../../lib/supabase.js';
 
-// MongoDB connection
-let client
-let db
-
-async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
-  }
-  return db
-}
-
-// Helper function to handle CORS
-function handleCORS(response) {
-  response.headers.set('Access-Control-Allow-Origin', process.env.CORS_ORIGINS || '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  return response
-}
-
-// OPTIONS handler for CORS
-export async function OPTIONS() {
-  return handleCORS(new NextResponse(null, { status: 200 }))
-}
-
-// Route handler function
-async function handleRoute(request, { params }) {
-  const { path = [] } = params
-  const route = `/${path.join('/')}`
-  const method = request.method
-
+export async function GET(request) {
   try {
-    const db = await connectToMongo()
-
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/root' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-
-    // Status endpoints - POST /api/status
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
+    const url = new URL(request.url);
+    const path = url.pathname.replace('/api/', '');
+    
+    // Initialize database on first request
+    await initializeDatabase();
+    
+    if (path === 'forest-projects' || path === 'forest-projects/') {
+      const { data, error } = await supabase
+        .from('forest_projects')
+        .select('*')
+        .order('contract_date', { ascending: false });
       
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
+      if (error) {
+        console.error('Error fetching forest projects:', error);
+        return NextResponse.json({ error: 'Failed to fetch forest projects' }, { status: 500 });
       }
-
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
-      }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
-    }
-
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
-        .find({})
-        .limit(1000)
-        .toArray()
-
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
       
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
+      return NextResponse.json(data || []);
     }
-
-    // Route not found
-    return handleCORS(NextResponse.json(
-      { error: `Route ${route} not found` }, 
-      { status: 404 }
-    ))
-
+    
+    if (path.startsWith('forest-projects/')) {
+      const id = path.split('/')[1];
+      const { data, error } = await supabase
+        .from('forest_projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching forest project:', error);
+        return NextResponse.json({ error: 'Failed to fetch forest project' }, { status: 500 });
+      }
+      
+      return NextResponse.json(data);
+    }
+    
+    return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
   } catch (error) {
-    console.error('API Error:', error)
-    return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
-      { status: 500 }
-    ))
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Export all HTTP methods
-export const GET = handleRoute
-export const POST = handleRoute
-export const PUT = handleRoute
-export const DELETE = handleRoute
-export const PATCH = handleRoute
+export async function POST(request) {
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname.replace('/api/', '');
+    
+    if (path === 'forest-projects' || path === 'forest-projects/') {
+      const body = await request.json();
+      
+      // Generate unique ID
+      const projectData = {
+        ...body,
+        id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        contract_date: new Date(body.contract_date).toISOString(),
+      };
+      
+      const { data, error } = await supabase
+        .from('forest_projects')
+        .insert([projectData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating forest project:', error);
+        return NextResponse.json({ error: 'Failed to create forest project' }, { status: 500 });
+      }
+      
+      return NextResponse.json({ success: true, data });
+    }
+    
+    return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname.replace('/api/', '');
+    
+    if (path.startsWith('forest-projects/')) {
+      const id = path.split('/')[1];
+      const body = await request.json();
+      
+      // Convert contract_date to ISO string if provided
+      if (body.contract_date) {
+        body.contract_date = new Date(body.contract_date).toISOString();
+      }
+      
+      const { data, error } = await supabase
+        .from('forest_projects')
+        .update(body)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating forest project:', error);
+        return NextResponse.json({ error: 'Failed to update forest project' }, { status: 500 });
+      }
+      
+      return NextResponse.json({ success: true, data });
+    }
+    
+    return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname.replace('/api/', '');
+    
+    if (path.startsWith('forest-projects/')) {
+      const id = path.split('/')[1];
+      
+      const { error } = await supabase
+        .from('forest_projects')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting forest project:', error);
+        return NextResponse.json({ error: 'Failed to delete forest project' }, { status: 500 });
+      }
+      
+      return NextResponse.json({ success: true, message: 'Project deleted successfully' });
+    }
+    
+    return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
