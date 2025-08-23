@@ -704,7 +704,7 @@ class ForestProjectAPITester:
             "carbon_tons_fixed": 2250.75,
             "carbon_credits_generated": 2250,
             "price_per_credit": 42.50,
-            "legal_status": "Certificado",
+            "legal_bureaucracy_status": "Certificado",
             "contract_date": "2024-01-15T10:30:00Z"
         }
         
