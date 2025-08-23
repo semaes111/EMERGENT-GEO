@@ -65,14 +65,29 @@ export async function POST(request) {
         projectData.total_amount = parseFloat(projectData.carbon_credits_generated) * parseFloat(projectData.price_per_credit);
       }
       
+      // Helper function to safely convert to number with default
+      const safeParseFloat = (value, defaultValue = 0) => {
+        if (value === null || value === undefined || value === '' || isNaN(value)) {
+          return defaultValue;
+        }
+        return parseFloat(value);
+      };
+      
+      const safeParseInt = (value, defaultValue = 0) => {
+        if (value === null || value === undefined || value === '' || isNaN(value)) {
+          return defaultValue;
+        }
+        return parseInt(value);
+      };
+      
       // Ensure numeric fields are properly converted with defaults
-      projectData.latitude = projectData.latitude ? parseFloat(projectData.latitude) : 0;
-      projectData.longitude = projectData.longitude ? parseFloat(projectData.longitude) : 0;
-      projectData.carbon_tons_fixed = projectData.carbon_tons_fixed ? parseFloat(projectData.carbon_tons_fixed) : 0;
-      projectData.carbon_credits_generated = projectData.carbon_credits_generated ? parseInt(projectData.carbon_credits_generated) : 0;
-      projectData.price_per_credit = projectData.price_per_credit ? parseFloat(projectData.price_per_credit) : 0;
-      projectData.hectares = projectData.hectares ? parseFloat(projectData.hectares) : 0;
-      projectData.total_amount = projectData.total_amount ? parseFloat(projectData.total_amount) : 0;
+      projectData.latitude = safeParseFloat(projectData.latitude, 0);
+      projectData.longitude = safeParseFloat(projectData.longitude, 0);
+      projectData.carbon_tons_fixed = safeParseFloat(projectData.carbon_tons_fixed, 0);
+      projectData.carbon_credits_generated = safeParseInt(projectData.carbon_credits_generated, 0);
+      projectData.price_per_credit = safeParseFloat(projectData.price_per_credit, 0);
+      projectData.hectares = safeParseFloat(projectData.hectares, 0);
+      projectData.total_amount = safeParseFloat(projectData.total_amount, 0);
       
       // Handle contract_date conversion safely
       if (body.contract_date) {
