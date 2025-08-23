@@ -790,6 +790,7 @@ class ForestProjectAPITester:
                 "latitude": 40.4168,
                 "longitude": -3.7038,
                 "hectares": 100,
+                "carbon_tons_fixed": 1000.0,
                 "carbon_credits_generated": 1000,
                 "price_per_credit": 45.0,
                 "legal_bureaucracy_status": "En Proceso",
