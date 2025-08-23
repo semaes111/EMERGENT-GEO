@@ -696,8 +696,7 @@ class ForestProjectAPITester:
         print("\n1️⃣ TEST: Complete valid project with automatic total calculation")
         
         valid_project = {
-            "name": "Bosque de Prueba Conexión",
-            "location": "Asturias, España", 
+            "project_name": "Bosque de Prueba Conexión",
             "latitude": 43.3614,
             "longitude": -5.8593,
             "hectares": 150.5,
