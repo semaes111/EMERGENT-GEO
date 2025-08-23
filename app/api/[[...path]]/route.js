@@ -102,7 +102,12 @@ export async function PUT(request) {
       
       // Convert contract_date to ISO string if provided
       if (body.contract_date) {
-        body.contract_date = new Date(body.contract_date).toISOString();
+        try {
+          body.contract_date = new Date(body.contract_date).toISOString();
+        } catch (error) {
+          console.error('Invalid contract_date:', body.contract_date);
+          return NextResponse.json({ error: 'Fecha de contrato inválida' }, { status: 400 });
+        }
       }
       
       const { data, error } = await supabase
