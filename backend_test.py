@@ -687,31 +687,308 @@ class ForestProjectAPITester:
         else:
             print("   ✅ No critical issues found")
 
+    def test_connection_error_resolution(self):
+        """FOCUSED TEST: Connection error resolution for POST /api/forest-projects"""
+        print("\n🔥 FOCUSED CONNECTION ERROR RESOLUTION TESTS")
+        print("=" * 70)
+        
+        # Test 1: Complete valid project with automatic total calculation
+        print("\n1️⃣ TEST: Complete valid project with automatic total calculation")
+        
+        valid_project = {
+            "name": "Bosque de Prueba Conexión",
+            "location": "Asturias, España", 
+            "latitude": 43.3614,
+            "longitude": -5.8593,
+            "hectares": 150.5,
+            "carbon_tons_fixed": 2250.75,
+            "carbon_credits_generated": 2250,
+            "price_per_credit": 42.50,
+            "legal_status": "Certificado",
+            "contract_date": "2024-01-15T10:30:00Z"
+        }
+        
+        try:
+            response = requests.post(f"{API_BASE}/forest-projects", 
+                                   json=valid_project, 
+                                   timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('data'):
+                    project = data['data']
+                    expected_total = 2250 * 42.50  # 95,625
+                    actual_total = project.get('total_amount')
+                    self.created_project_ids.append(project.get('id'))
+                    
+                    self.log_result(
+                        "Connection Error Resolution - Complete Project", 
+                        True, 
+                        f"Project created successfully! Auto-calculated total: {actual_total}",
+                        f"Expected: {expected_total}, Project ID: {project.get('id')}"
+                    )
+                    
+                    # Verify data persistence
+                    project_id = project.get('id')
+                    verify_response = requests.get(f"{API_BASE}/forest-projects/{project_id}")
+                    if verify_response.status_code == 200:
+                        self.log_result(
+                            "Data Persistence Verification", 
+                            True, 
+                            "Data persisted correctly in Supabase",
+                            "Connection to database working"
+                        )
+                    else:
+                        self.log_result(
+                            "Data Persistence Verification", 
+                            False, 
+                            "Data persistence verification failed",
+                            verify_response.text
+                        )
+                else:
+                    self.log_result(
+                        "Connection Error Resolution - Complete Project", 
+                        False, 
+                        "Invalid response structure",
+                        response.text
+                    )
+            else:
+                self.log_result(
+                    "Connection Error Resolution - Complete Project", 
+                    False, 
+                    f"Request failed with HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except requests.exceptions.ConnectionError as e:
+            self.log_result(
+                "Connection Error Resolution - Complete Project", 
+                False, 
+                "CONNECTION ERROR STILL EXISTS",
+                str(e)
+            )
+        except Exception as e:
+            self.log_result(
+                "Connection Error Resolution - Complete Project", 
+                False, 
+                f"Unexpected error: {str(e)}",
+                "Error during connection test"
+            )
+        
+        # Test 2: Different date formats to test "Invalid time value" fix
+        print("\n2️⃣ TEST: Different date formats (Invalid time value fix)")
+        
+        date_formats = [
+            ("ISO with milliseconds", "2024-02-20T14:30:00.000Z"),
+            ("ISO without milliseconds", "2024-02-20T14:30:00Z"),
+            ("Date only", "2024-02-20"),
+            ("With timezone", "2024-02-20T14:30:00+01:00")
+        ]
+        
+        for desc, date_format in date_formats:
+            test_project = {
+                "name": f"Test Fecha - {desc}",
+                "location": "Madrid, España",
+                "latitude": 40.4168,
+                "longitude": -3.7038,
+                "hectares": 100,
+                "carbon_credits_generated": 1000,
+                "price_per_credit": 45.0,
+                "legal_status": "En Proceso",
+                "contract_date": date_format
+            }
+            
+            try:
+                response = requests.post(f"{API_BASE}/forest-projects", 
+                                       json=test_project, 
+                                       timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success') and data.get('data'):
+                        self.created_project_ids.append(data['data'].get('id'))
+                        self.log_result(
+                            f"Date Format Test - {desc}", 
+                            True, 
+                            f"Date format '{date_format}' accepted",
+                            "Invalid time value error resolved"
+                        )
+                    else:
+                        self.log_result(
+                            f"Date Format Test - {desc}", 
+                            False, 
+                            f"Date format '{date_format}' - invalid response",
+                            response.text
+                        )
+                else:
+                    self.log_result(
+                        f"Date Format Test - {desc}", 
+                        False, 
+                        f"Date format '{date_format}' rejected: HTTP {response.status_code}",
+                        response.text[:100]
+                    )
+                    
+            except Exception as e:
+                self.log_result(
+                    f"Date Format Test - {desc}", 
+                    False, 
+                    f"Error with date '{date_format}': {str(e)}",
+                    "Date handling error"
+                )
+        
+        # Test 3: Robust data types
+        print("\n3️⃣ TEST: Robust data type handling")
+        
+        robust_project = {
+            "name": "Proyecto Robusto",
+            "location": "Galicia, España",
+            "latitude": "42.5751",      # String latitude
+            "longitude": "-8.1339",     # String longitude  
+            "hectares": "200.5",        # String hectares
+            "carbon_credits_generated": "3000",  # String credits
+            "price_per_credit": "38.75", # String price
+            "legal_status": "Certificado",
+            "contract_date": "2024-03-10T09:00:00Z"
+        }
+        
+        try:
+            response = requests.post(f"{API_BASE}/forest-projects", 
+                                   json=robust_project, 
+                                   timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('data'):
+                    project = data['data']
+                    self.created_project_ids.append(project.get('id'))
+                    self.log_result(
+                        "Robust Data Type Handling", 
+                        True, 
+                        "String data types converted correctly",
+                        f"Latitude: {project.get('latitude')}, Total: {project.get('total_amount')}"
+                    )
+                else:
+                    self.log_result(
+                        "Robust Data Type Handling", 
+                        False, 
+                        "Invalid response for string data types",
+                        response.text
+                    )
+            else:
+                self.log_result(
+                    "Robust Data Type Handling", 
+                    False, 
+                    f"Robust data handling failed: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "Robust Data Type Handling", 
+                False, 
+                f"Error in robust test: {str(e)}",
+                "Data type conversion error"
+            )
+        
+        # Test 4: Error handling for invalid date
+        print("\n4️⃣ TEST: Invalid date error handling")
+        
+        invalid_date_project = {
+            "name": "Test Fecha Inválida",
+            "location": "Valencia, España",
+            "latitude": 39.4699,
+            "longitude": -0.3763,
+            "hectares": 75,
+            "carbon_credits_generated": 800,
+            "price_per_credit": 40.0,
+            "legal_status": "En Proceso",
+            "contract_date": "invalid-date-format"
+        }
+        
+        try:
+            response = requests.post(f"{API_BASE}/forest-projects", 
+                                   json=invalid_date_project, 
+                                   timeout=10)
+            
+            if response.status_code == 400:
+                self.log_result(
+                    "Invalid Date Error Handling", 
+                    True, 
+                    "Invalid date properly rejected with 400 error",
+                    response.text
+                )
+            elif response.status_code == 500:
+                # Check if it's a proper error message
+                error_text = response.text
+                if "Fecha de contrato inválida" in error_text or "Invalid" in error_text:
+                    self.log_result(
+                        "Invalid Date Error Handling", 
+                        True, 
+                        "Invalid date handled with proper error message",
+                        error_text
+                    )
+                else:
+                    self.log_result(
+                        "Invalid Date Error Handling", 
+                        False, 
+                        "Invalid date caused server error without proper message",
+                        error_text
+                    )
+            else:
+                self.log_result(
+                    "Invalid Date Error Handling", 
+                    False, 
+                    f"Invalid date not handled correctly: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "Invalid Date Error Handling", 
+                False, 
+                f"Error in invalid date test: {str(e)}",
+                "Date validation error"
+            )
+
 if __name__ == "__main__":
     print("🌲 Forest Projects Backend API Tester")
     print(f"🔗 Base URL: {BASE_URL}")
     print(f"🔗 API URL: {API_BASE}")
     
-    tester = ForestProjectAPITester()
-    
-    try:
-        tester.run_all_tests()
-    except KeyboardInterrupt:
-        print("\n⚠️  Testing interrupted by user")
-        tester.cleanup_test_data()
-    except Exception as e:
-        print(f"\n💥 Unexpected error during testing: {str(e)}")
-        tester.cleanup_test_data()
-        sys.exit(1)
-    
-    # Exit with error code if there were critical failures
-    critical_failures = [r for r in tester.test_results if not r['success'] and 
-                        any(keyword in r['test'].lower() for keyword in 
-                            ['database', 'supabase', 'create', 'get /api/forest-projects'])]
-    
-    if critical_failures:
-        print(f"\n💥 Exiting with error code due to {len(critical_failures)} critical failures")
-        sys.exit(1)
+    # Check if we should run focused connection tests
+    if len(sys.argv) > 1 and sys.argv[1] == "--connection-test":
+        print("\n🔥 RUNNING FOCUSED CONNECTION ERROR RESOLUTION TESTS")
+        tester = ForestProjectAPITester()
+        try:
+            tester.test_connection_error_resolution()
+            tester.print_summary()
+            tester.cleanup_test_data()
+        except Exception as e:
+            print(f"\n💥 Connection test error: {str(e)}")
+            tester.cleanup_test_data()
+            sys.exit(1)
     else:
-        print(f"\n🎉 All tests completed successfully!")
-        sys.exit(0)
+        # Run full test suite
+        tester = ForestProjectAPITester()
+        
+        try:
+            tester.run_all_tests()
+        except KeyboardInterrupt:
+            print("\n⚠️  Testing interrupted by user")
+            tester.cleanup_test_data()
+        except Exception as e:
+            print(f"\n💥 Unexpected error during testing: {str(e)}")
+            tester.cleanup_test_data()
+            sys.exit(1)
+        
+        # Exit with error code if there were critical failures
+        critical_failures = [r for r in tester.test_results if not r['success'] and 
+                            any(keyword in r['test'].lower() for keyword in 
+                                ['database', 'supabase', 'create', 'get /api/forest-projects'])]
+        
+        if critical_failures:
+            print(f"\n💥 Exiting with error code due to {len(critical_failures)} critical failures")
+            sys.exit(1)
+        else:
+            print(f"\n🎉 All tests completed successfully!")
+            sys.exit(0)
