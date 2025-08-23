@@ -2,6 +2,7 @@
 """
 Comprehensive Backend API Testing for Forest Projects
 Tests all CRUD operations, data validation, and Supabase integration
+UPDATED: Added focused connection error resolution tests
 """
 
 import requests
@@ -11,8 +12,8 @@ import sys
 from datetime import datetime, timedelta
 import os
 
-# Get base URL from environment - use localhost for internal testing
-BASE_URL = "http://localhost:3000"
+# Get base URL from environment - use production URL for connection testing
+BASE_URL = "https://chestnut-jocelyn-79.app-hosting.dev"
 API_BASE = f"{BASE_URL}/api"
 
 class ForestProjectAPITester:
