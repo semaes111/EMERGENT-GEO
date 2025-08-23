@@ -54,11 +54,25 @@ export async function POST(request) {
     if (path === 'forest-projects' || path === 'forest-projects/') {
       const body = await request.json();
       
-      // Generate unique ID
+      // Generate unique ID and calculate totals
       const projectData = {
         ...body,
         id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
+      
+      // Calculate total_amount if not provided
+      if (!projectData.total_amount && projectData.carbon_credits_generated && projectData.price_per_credit) {
+        projectData.total_amount = parseFloat(projectData.carbon_credits_generated) * parseFloat(projectData.price_per_credit);
+      }
+      
+      // Ensure numeric fields are properly converted
+      if (projectData.latitude) projectData.latitude = parseFloat(projectData.latitude);
+      if (projectData.longitude) projectData.longitude = parseFloat(projectData.longitude);
+      if (projectData.carbon_tons_fixed) projectData.carbon_tons_fixed = parseFloat(projectData.carbon_tons_fixed);
+      if (projectData.carbon_credits_generated) projectData.carbon_credits_generated = parseInt(projectData.carbon_credits_generated);
+      if (projectData.price_per_credit) projectData.price_per_credit = parseFloat(projectData.price_per_credit);
+      if (projectData.hectares) projectData.hectares = parseFloat(projectData.hectares);
+      if (projectData.total_amount) projectData.total_amount = parseFloat(projectData.total_amount);
       
       // Handle contract_date conversion safely
       if (body.contract_date) {
