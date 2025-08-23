@@ -838,8 +838,7 @@ class ForestProjectAPITester:
         print("\n3️⃣ TEST: Robust data type handling")
         
         robust_project = {
-            "name": "Proyecto Robusto",
-            "location": "Galicia, España",
+            "project_name": "Proyecto Robusto",
             "latitude": "42.5751",      # String latitude
             "longitude": "-8.1339",     # String longitude  
             "hectares": "200.5",        # String hectares
