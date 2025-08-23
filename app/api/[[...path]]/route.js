@@ -57,9 +57,18 @@ export async function POST(request) {
       // Generate unique ID
       const projectData = {
         ...body,
-        id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        contract_date: new Date(body.contract_date).toISOString(),
+        id: `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
+      
+      // Handle contract_date conversion safely
+      if (body.contract_date) {
+        try {
+          projectData.contract_date = new Date(body.contract_date).toISOString();
+        } catch (error) {
+          console.error('Invalid contract_date:', body.contract_date);
+          return NextResponse.json({ error: 'Fecha de contrato inválida' }, { status: 400 });
+        }
+      }
       
       const { data, error } = await supabase
         .from('forest_projects')
