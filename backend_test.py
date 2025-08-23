@@ -847,7 +847,7 @@ class ForestProjectAPITester:
             "hectares": "200.5",        # String hectares
             "carbon_credits_generated": "3000",  # String credits
             "price_per_credit": "38.75", # String price
-            "legal_status": "Certificado",
+            "legal_bureaucracy_status": "Certificado",
             "contract_date": "2024-03-10T09:00:00Z"
         }
         
