@@ -794,7 +794,7 @@ class ForestProjectAPITester:
                 "hectares": 100,
                 "carbon_credits_generated": 1000,
                 "price_per_credit": 45.0,
-                "legal_status": "En Proceso",
+                "legal_bureaucracy_status": "En Proceso",
                 "contract_date": date_format
             }
             
