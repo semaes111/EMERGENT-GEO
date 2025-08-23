@@ -843,6 +843,7 @@ class ForestProjectAPITester:
             "latitude": "42.5751",      # String latitude
             "longitude": "-8.1339",     # String longitude  
             "hectares": "200.5",        # String hectares
+            "carbon_tons_fixed": "3000.0",  # String carbon tons
             "carbon_credits_generated": "3000",  # String credits
             "price_per_credit": "38.75", # String price
             "legal_bureaucracy_status": "Certificado",
