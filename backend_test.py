@@ -11,8 +11,8 @@ import sys
 from datetime import datetime, timedelta
 import os
 
-# Get base URL from environment
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://chestnut-jocelyn-79.app-hosting.dev')
+# Get base URL from environment - use localhost for internal testing
+BASE_URL = "http://localhost:3000"
 API_BASE = f"{BASE_URL}/api"
 
 class ForestProjectAPITester:
