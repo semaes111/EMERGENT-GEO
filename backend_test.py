@@ -891,8 +891,7 @@ class ForestProjectAPITester:
         print("\n4️⃣ TEST: Invalid date error handling")
         
         invalid_date_project = {
-            "name": "Test Fecha Inválida",
-            "location": "Valencia, España",
+            "project_name": "Test Fecha Inválida",
             "latitude": 39.4699,
             "longitude": -0.3763,
             "hectares": 75,
