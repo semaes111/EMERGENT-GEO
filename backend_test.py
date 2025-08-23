@@ -786,8 +786,7 @@ class ForestProjectAPITester:
         
         for desc, date_format in date_formats:
             test_project = {
-                "name": f"Test Fecha - {desc}",
-                "location": "Madrid, España",
+                "project_name": f"Test Fecha - {desc}",
                 "latitude": 40.4168,
                 "longitude": -3.7038,
                 "hectares": 100,
